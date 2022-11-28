@@ -34,5 +34,15 @@ namespace ProductGrpc.Server.Services
 
             return Task.FromResult(output);
         }
+
+        public override Task<ProductInserted> InsertProduct(ProductModel request, ServerCallContext context)
+        {
+            ProductInserted output = new ProductInserted
+            {
+                Message = "Product Inserted Succefully"
+            };
+
+            return Task.FromResult(output);
+        }
     }
 }

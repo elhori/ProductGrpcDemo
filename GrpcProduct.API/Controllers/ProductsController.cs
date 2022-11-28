@@ -38,5 +38,28 @@ namespace GrpcProduct.API.Controllers
 
             return Ok(new { product = result });
         }
+
+        [HttpPost("insert-product")]
+        public async Task<ActionResult> PostProduct([FromBody] ProductModel model)
+        {
+            if(!ModelState.IsValid)
+            {
+                return Problem("Model state is unvalid!");
+            }
+
+            var channel = GrpcChannel.ForAddress("https://localhost:7044");
+
+            var client = new Product.ProductClient(channel);
+
+            var proto = new ProductGrpc.API.Protos.ProductModel
+            {
+                Name = model.Name,
+                Price = model.Price
+            };
+
+            var product = await client.InsertProductAsync(proto);
+
+            return Ok(product.Message);
+        }
     }
 }

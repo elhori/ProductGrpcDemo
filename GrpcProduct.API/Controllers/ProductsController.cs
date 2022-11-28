@@ -1,9 +1,11 @@
 ﻿using Grpc.Net.Client;
+using GrpcProduct.API.Commands;
 using GrpcProduct.API.Models;
+using GrpcProduct.API.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductGrpc.API.Protos;
-using ProductModel = GrpcProduct.API.Models.ProductModel;
 
 namespace GrpcProduct.API.Controllers
 {
@@ -12,54 +14,33 @@ namespace GrpcProduct.API.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ILogger<ProductsController> _logger;
+        private readonly IMediator _mediator;
 
-        public ProductsController(ILogger<ProductsController> logger)
+        public ProductsController(ILogger<ProductsController> logger, IMediator mediator)
         {
             _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProductModel>> GetProduct(int id)
+        public async Task<ActionResult<GrpcProduct.API.Models.ProductModel>> GetProduct(int id)
         {
             if (id == 0)
                 return NotFound($"The product with identifier {id} is not found!");
 
-            var channel = GrpcChannel.ForAddress("https://localhost:7044");
+            var query = new GetProductQuery(id);
 
-            var client = new Product.ProductClient(channel);
+            var result = await _mediator.Send(query);
 
-            var product = await client.GetProductInfoAsync(new ProductById { ProductId = id });
-
-            var result = new ProductModel
-            {
-                Name = product.Name,
-                Price = product.Price
-            };
-
-            return Ok(new { product = result });
+            return Ok(result);
         }
 
         [HttpPost("insert-product")]
-        public async Task<ActionResult> PostProduct([FromBody] ProductModel model)
+        public async Task<ActionResult> PostProduct([FromBody] PostProductCommand command)
         {
-            if(!ModelState.IsValid)
-            {
-                return Problem("Model state is unvalid!");
-            }
+            var result = await _mediator.Send(command);
 
-            var channel = GrpcChannel.ForAddress("https://localhost:7044");
-
-            var client = new Product.ProductClient(channel);
-
-            var proto = new ProductGrpc.API.Protos.ProductModel
-            {
-                Name = model.Name,
-                Price = model.Price
-            };
-
-            var product = await client.InsertProductAsync(proto);
-
-            return Ok(product.Message);
+            return Ok(result.Message);
         }
     }
 }

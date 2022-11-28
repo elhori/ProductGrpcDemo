@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option csharp_namespace = "ProductGrpc.Server.Protos";
+
+service Product {
+	rpc GetProductInfo (ProductById) returns (ProductModel);
+}
+
+message ProductById {
+	int32 productId = 1;
+}
+
+message ProductModel {
+	string name = 1;
+	float price = 2;
+}

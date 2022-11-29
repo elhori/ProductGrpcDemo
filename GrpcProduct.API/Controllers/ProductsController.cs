@@ -32,6 +32,7 @@ namespace GrpcProduct.API.Controllers
 
             var result = await _mediator.Send(query);
 
+
             return Ok(result);
         }
 
